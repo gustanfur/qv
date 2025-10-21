@@ -5,12 +5,23 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import statsmodels.api as sm
 
-# Configuração do Streamlit
+# 🔐 Autenticação por e-mail e senha via secrets
+usuarios_autorizados = st.secrets["auth"]["emails"]
+senha_correta = st.secrets["auth"]["senha"]
+
+st.title("🔐 Acesso restrito")
+email = st.text_input("Digite seu e-mail:")
+senha = st.text_input("Digite a senha:", type="password")
+
+if email not in usuarios_autorizados or senha != senha_correta:
+    st.warning("Acesso negado. Verifique e-mail e senha.")
+    st.stop()
+
+# ✅ Configuração do Streamlit
 st.set_page_config(page_title="Análise de Qualidade de Vida", layout="wide")
 st.title("📊 Análise de Qualidade de Vida")
 
-# Autenticação Google Sheets
-CREDENTIALS_PATH = r"C:\Users\Gustavo\Documents\GitHub\qv\teseqv.json"
+# ✅ Autenticação Google Sheets via secrets
 creds = service_account.Credentials.from_service_account_info(st.secrets["google"])
 service = build('sheets', 'v4', credentials=creds)
 sheet = service.spreadsheets()
@@ -27,13 +38,13 @@ else:
     st.error("Não foi possível carregar os dados da planilha.")
     st.stop()
 
-# Conversão de colunas numéricas
+# ✅ Conversão de colunas numéricas
 if 'Idade' in df.columns:
     df['Idade'] = pd.to_numeric(df['Idade'], errors='coerce')
 if 'QV_Escore' in df.columns:
     df['QV_Escore'] = pd.to_numeric(df['QV_Escore'], errors='coerce')
 
-# Menu lateral
+# ✅ Menu lateral
 aba = st.sidebar.radio("📂 Selecione uma aba:", [
     "Dados brutos",
     "Estatísticas descritivas",
@@ -43,12 +54,12 @@ aba = st.sidebar.radio("📂 Selecione uma aba:", [
     "Análises estatísticas"
 ])
 
-# Aba 1: Dados brutos
+# 📋 Aba 1: Dados brutos
 if aba == "Dados brutos":
     st.subheader("📋 Dados brutos")
     st.dataframe(df)
 
-# Aba 2: Estatísticas descritivas
+# 📊 Aba 2: Estatísticas descritivas
 elif aba == "Estatísticas descritivas":
     st.subheader("📊 Estatísticas descritivas")
     st.write("**Resumo geral:**")
@@ -57,7 +68,7 @@ elif aba == "Estatísticas descritivas":
         st.write("**Resumo da idade:**")
         st.dataframe(df['Idade'].describe())
 
-# Aba 3: Gráficos
+# 📈 Aba 3: Gráficos
 elif aba == "Gráficos":
     st.subheader("📈 Gráficos")
     if 'Idade' in df.columns:
@@ -73,7 +84,7 @@ elif aba == "Gráficos":
         ax.set_title("Idade vs QV")
         st.pyplot(fig)
 
-# Aba 4: Filtros combinados
+# 🔍 Aba 4: Filtros combinados
 elif aba == "Filtros combinados":
     st.subheader("🔍 Filtros combinados")
     col1, col2, col3 = st.columns(3)
@@ -91,7 +102,7 @@ elif aba == "Filtros combinados":
 
     st.dataframe(df_filtrado)
 
-# Aba 5: Exportar dados
+# 📥 Aba 5: Exportar dados
 elif aba == "Exportar dados":
     st.subheader("📥 Exportar dados")
     st.download_button(
@@ -101,7 +112,7 @@ elif aba == "Exportar dados":
         mime='text/csv'
     )
 
-# Aba 6: Análises estatísticas
+# 📐 Aba 6: Análises estatísticas
 elif aba == "Análises estatísticas":
     st.subheader("📐 Análises estatísticas")
     if 'Idade' in df.columns and 'QV_Escore' in df.columns:
