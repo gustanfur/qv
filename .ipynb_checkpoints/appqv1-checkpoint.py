@@ -10,7 +10,7 @@ st.set_page_config(page_title="Análise de Qualidade de Vida", layout="wide")
 st.title("📊 Análise de Qualidade de Vida")
 
 # Autenticação Google Sheets
-CREDENTIALS_PATH = r"C:\Users\Gustavo\Documents\GitHub\qv\Tese QV\teseqv.json"
+CREDENTIALS_PATH = r"C:\Users\Gustavo\Documents\GitHub\gustanfur\Tese QV\teseqv.json"
 creds = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH)
 service = build('sheets', 'v4', credentials=creds)
 sheet = service.spreadsheets()
