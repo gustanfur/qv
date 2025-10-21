@@ -11,7 +11,7 @@ st.title("📊 Análise de Qualidade de Vida")
 
 # Autenticação Google Sheets
 CREDENTIALS_PATH = r"C:\Users\Gustavo\Documents\GitHub\qv\teseqv.json"
-creds = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH)
+creds = service_account.Credentials.from_service_account_info(st.secrets["google"])
 service = build('sheets', 'v4', credentials=creds)
 sheet = service.spreadsheets()
 
