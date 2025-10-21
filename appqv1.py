@@ -49,7 +49,7 @@ try:
     sheet = service.spreadsheets()
 
     SHEET_ID = st.secrets["planilha"]["sheet_id"]
-    RANGE = st.secrets["planilha"]["range"]
+    RANGE = "Respostas ao formulário 1!A1:AM1000"  # ✅ Faixa até a coluna AM
 
     result = sheet.values().get(spreadsheetId=SHEET_ID, range=RANGE).execute()
     values = result.get('values', [])
@@ -58,7 +58,7 @@ try:
         st.error("Não foi possível carregar os dados da planilha.")
         st.stop()
 
-    # Garante que todas as colunas com dados sejam preservadas
+    # Garante que todas as colunas até AM sejam mantidas
     colunas = values[0]
     num_colunas = len(colunas)
 
