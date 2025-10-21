@@ -47,8 +47,8 @@ creds = service_account.Credentials.from_service_account_info(st.secrets["google
 service = build('sheets', 'v4', credentials=creds)
 sheet = service.spreadsheets()
 
-SHEET_ID = "1PgkoCQqyfqrwSIinYCnZ4sq5WjjeJJmVDFmQLNHFPak"
-RANGE = "Respostas ao formulário 1!A1:Z1000"
+SHEET_ID = st.secrets["planilha"]["sheet_id"]
+RANGE = st.secrets["planilha"]["range"]
 
 result = sheet.values().get(spreadsheetId=SHEET_ID, range=RANGE).execute()
 values = result.get('values', [])
