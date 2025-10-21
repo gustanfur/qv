@@ -58,7 +58,7 @@ try:
         st.error("Não foi possível carregar os dados da planilha.")
         st.stop()
 
-    # Garante que todas as colunas sejam mantidas
+    # Garante que todas as colunas com dados sejam preservadas
     colunas = values[0]
     num_colunas = len(colunas)
 
