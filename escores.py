@@ -5,6 +5,7 @@ def calcular_escores(df: pd.DataFrame) -> pd.DataFrame:
     - Usa linha 1 como cabeçalho (rótulos Q)
     - Ignora linha 2 (textos do questionário)
     - Usa dados a partir da linha 3 como observações
+    - Mantém a coluna Índice
     - Recodifica textos para valores numéricos
     - Aplica inversão em Q3, Q4 e Q26
     - Calcula escores dos 4 domínios e remove colunas intermediárias
@@ -16,9 +17,10 @@ def calcular_escores(df: pd.DataFrame) -> pd.DataFrame:
     df_dados = df_resetado.iloc[2:].copy().reset_index(drop=True)
     df_dados.columns = novo_header
 
-    # Etapa 2: Seleciona colunas Q1 a Q26
+    # Etapa 2: Mantém a coluna Índice + Q1 a Q26
     colunas_q = [f"Q{i}" for i in range(1, 27)]
-    df_q = df_dados[colunas_q].copy()
+    colunas_utilizadas = ["Índice"] + colunas_q
+    df_q = df_dados[colunas_utilizadas].copy()
 
     # Etapa 3: Recodificação textual com limpeza
     mapa_texto = {
@@ -48,8 +50,7 @@ def calcular_escores(df: pd.DataFrame) -> pd.DataFrame:
         "Sempre": 1
     }
 
-    # Aplica o mapa apenas nas colunas Q1 a Q26
-    for col in df_q.columns:
+    for col in colunas_q:
         df_q[col] = df_q[col].astype(str).str.strip().map(mapa_texto)
 
     # Etapa 4: Aplica inversão SOMENTE nas colunas específicas
