@@ -17,7 +17,7 @@ def calcular_escores(df: pd.DataFrame) -> pd.DataFrame:
     df_dados = df_resetado.iloc[2:].copy().reset_index(drop=True)
 
     # Preserva a coluna Índice antes de redefinir os cabeçalhos
-    if "Índice" in df.columns:
+    if "Índice" in df.columns and "Índice" not in df_dados.columns:
         indice_coluna = df["Índice"].iloc[2:].reset_index(drop=True)
         df_dados.insert(0, "Índice", indice_coluna)
 
