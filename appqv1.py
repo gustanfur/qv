@@ -5,23 +5,45 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import statsmodels.api as sm
 
-# 🔐 Autenticação por e-mail e senha via secrets
+# Configuração do Streamlit
+st.set_page_config(page_title="Análise de Qualidade de Vida", layout="wide")
+
+# Autenticação via secrets
 usuarios_autorizados = st.secrets["auth"]["emails"]
 senha_correta = st.secrets["auth"]["senha"]
 
-st.title("🔐 Acesso restrito")
-email = st.text_input("Digite seu e-mail:")
-senha = st.text_input("Digite a senha:", type="password")
+# Inicializa sessão
+if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
+    st.session_state.email = ""
 
-if email not in usuarios_autorizados or senha != senha_correta:
-    st.warning("Acesso negado. Verifique e-mail e senha.")
+# 🔐 Tela de login
+if not st.session_state.autenticado:
+    st.title("🔐 Acesso restrito")
+    email = st.text_input("Digite seu e-mail:")
+    senha = st.text_input("Digite a senha:", type="password")
+    if st.button("Entrar"):
+        if email in usuarios_autorizados and senha == senha_correta:
+            st.session_state.autenticado = True
+            st.session_state.email = email
+            st.success("✅ Acesso liberado!")
+            st.experimental_rerun()
+        else:
+            st.error("E-mail ou senha incorretos.")
     st.stop()
 
-# ✅ Configuração do Streamlit
-st.set_page_config(page_title="Análise de Qualidade de Vida", layout="wide")
-st.title("📊 Análise de Qualidade de Vida")
+# 🔓 Conteúdo do app após login
+st.sidebar.markdown(f"👤 Logado como: `{st.session_state.email}`")
+if st.sidebar.button("🚪 Logout"):
+    st.session_state.autenticado = False
+    st.session_state.email = ""
+    st.experimental_rerun()
 
-# ✅ Autenticação Google Sheets via secrets
+# Boas-vindas
+st.title("📊 Análise de Qualidade de Vida")
+st.success(f"Bem-vindo(a), {st.session_state.email}!")
+
+# Autenticação Google Sheets
 creds = service_account.Credentials.from_service_account_info(st.secrets["google"])
 service = build('sheets', 'v4', credentials=creds)
 sheet = service.spreadsheets()
@@ -38,13 +60,13 @@ else:
     st.error("Não foi possível carregar os dados da planilha.")
     st.stop()
 
-# ✅ Conversão de colunas numéricas
+# Conversão de colunas numéricas
 if 'Idade' in df.columns:
     df['Idade'] = pd.to_numeric(df['Idade'], errors='coerce')
 if 'QV_Escore' in df.columns:
     df['QV_Escore'] = pd.to_numeric(df['QV_Escore'], errors='coerce')
 
-# ✅ Menu lateral
+# Menu lateral
 aba = st.sidebar.radio("📂 Selecione uma aba:", [
     "Dados brutos",
     "Estatísticas descritivas",
