@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
-from ajusteBD import tratar_dados  # Função que aplica tratamento ao DataFrame
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
@@ -68,10 +67,7 @@ try:
         linha_completa = linha + [""] * (num_colunas - len(linha))
         linhas.append(linha_completa)
 
-    df_original = pd.DataFrame(linhas, columns=colunas)
-
-    # ✅ Aplica tratamento via módulo ajusteBD
-    df = tratar_dados(df_original)
+    df = pd.DataFrame(linhas, columns=colunas)
 
 except Exception as e:
     st.error(f"Erro ao carregar os dados: {e}")
