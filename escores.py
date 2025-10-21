@@ -7,6 +7,7 @@ def calcular_escores(df: pd.DataFrame) -> pd.DataFrame:
     - Usa dados a partir da linha 3 como observações
     - Recodifica textos para valores numéricos
     - Aplica inversão em Q3, Q4 e Q26
+    - Calcula escores dos 4 domínios e remove colunas intermediárias
     """
 
     # Etapa 1: Reindexa usando linha 1 como cabeçalho
@@ -58,5 +59,24 @@ def calcular_escores(df: pd.DataFrame) -> pd.DataFrame:
     for col in colunas_invertidas:
         if col in df_q.columns:
             df_q[col] = pd.to_numeric(df_q[col], errors='coerce').map(mapa_inverso)
+
+    # Etapa 5: Conversão para numérico
+    df_q = df_q.apply(pd.to_numeric, errors='coerce')
+
+    # Etapa 6: Cálculo dos escores
+    df_q["fisico"] = df_q[["Q3", "Q4", "Q10", "Q15", "Q16", "Q17", "Q18"]].mean(axis=1) * 4
+    df_q["Domínio Físico"] = (df_q["fisico"] - 4) * (100 / 16)
+
+    df_q["psico"] = df_q[["Q5", "Q6", "Q7", "Q11", "Q19", "Q26"]].mean(axis=1) * 4
+    df_q["Domínio Psicológico"] = (df_q["psico"] - 4) * (100 / 16)
+
+    df_q["social"] = df_q[["Q20", "Q21", "Q22"]].mean(axis=1) * 4
+    df_q["Domínio Social"] = (df_q["social"] - 4) * (100 / 16)
+
+    df_q["ambiente"] = df_q[["Q8", "Q9", "Q12", "Q13", "Q14", "Q23", "Q24", "Q25"]].mean(axis=1) * 4
+    df_q["Domínio Ambiente"] = (df_q["ambiente"] - 4) * (100 / 16)
+
+    # Etapa 7: Remove colunas intermediárias
+    df_q.drop(columns=["fisico", "psico", "social", "ambiente"], inplace=True)
 
     return df_q
