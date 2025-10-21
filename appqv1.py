@@ -1,9 +1,8 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
 import statsmodels.api as sm
+from ajusteBD import carregar_e_tratar_planilha  # ✅ Novo módulo
 
 # Configuração do Streamlit
 st.set_page_config(page_title="Análise de Qualidade de Vida", layout="wide")
@@ -42,21 +41,11 @@ if st.sidebar.button("🚪 Logout"):
 st.title("📊 Análise de Qualidade de Vida")
 st.success(f"Bem-vindo(a), {st.session_state.email}!")
 
-# ✅ Autenticação Google Sheets
-creds = service_account.Credentials.from_service_account_info(st.secrets["google"])
-service = build('sheets', 'v4', credentials=creds)
-sheet = service.spreadsheets()
-
-SHEET_ID = st.secrets["planilha"]["sheet_id"]
-RANGE = st.secrets["planilha"]["range"]
-
-result = sheet.values().get(spreadsheetId=SHEET_ID, range=RANGE).execute()
-values = result.get('values', [])
-
-if values:
-    df = pd.DataFrame(values[1:], columns=values[0])
-else:
-    st.error("Não foi possível carregar os dados da planilha.")
+# ✅ Carrega e trata os dados via ajusteBD
+try:
+    df = carregar_e_tratar_planilha()
+except Exception as e:
+    st.error(f"Erro ao carregar os dados: {e}")
     st.stop()
 
 # ✅ Conversão de colunas numéricas
