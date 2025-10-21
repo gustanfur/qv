@@ -13,7 +13,7 @@ def calcular_escores(df: pd.DataFrame) -> pd.DataFrame:
     # Etapa 1: Reindexa usando linha 1 como cabeçalho
     df_resetado = df.reset_index(drop=True)
     novo_header = df_resetado.iloc[0]
-    df_dados = df_resetado.iloc[2:].copy()
+    df_dados = df_resetado.iloc[2:].copy().reset_index(drop=True)
     df_dados.columns = novo_header
 
     # Etapa 2: Seleciona colunas Q1 a Q26
