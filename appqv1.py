@@ -5,6 +5,7 @@ import statsmodels.api as sm
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from ajusteBD import tratar_dados  # ✅ Módulo de tratamento
+from escores import calcular_escores # Módulo de escores
 
 # Configuração do Streamlit
 st.set_page_config(page_title="Análise de Qualidade de Vida", layout="wide")
@@ -72,6 +73,8 @@ try:
 
     # ✅ Aplica tratamento com ajusteBD
     df = tratar_dados(df_original)
+    # Calcula os escores
+    df_escores = calcular_escores(df)
 
 except Exception as e:
     st.error(f"Erro ao carregar os dados: {e}")
@@ -90,7 +93,8 @@ aba = st.sidebar.radio("📂 Selecione uma aba:", [
     "Gráficos",
     "Filtros combinados",
     "Exportar dados",
-    "Análises estatísticas"
+    "Análises estatísticas",
+    "Escores tratados"
 ])
 
 # 📋 Aba 1: Dados brutos
@@ -164,3 +168,8 @@ elif aba == "Análises estatísticas":
         modelo = sm.OLS(y, X).fit()
         st.write("**Resumo da regressão linear:**")
         st.text(modelo.summary())
+
+# 🧮 Aba 7: Escores tratados
+elif aba == "Escores tratados":
+    st.subheader("🧮 Escores tratados (Q1 a Q26)")
+    st.dataframe(df_escores)
