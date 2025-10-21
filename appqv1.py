@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+from ajusteBD import tratar_dados  # ✅ Módulo de tratamento
 
 # Configuração do Streamlit
 st.set_page_config(page_title="Análise de Qualidade de Vida", layout="wide")
@@ -42,14 +43,14 @@ if st.sidebar.button("🚪 Logout"):
 st.title("📊 Análise de Qualidade de Vida")
 st.success(f"Bem-vindo(a), {st.session_state.email}!")
 
-# ✅ Acesso à planilha e carregamento completo dos dados
+# ✅ Acesso à planilha e tratamento com ajusteBD
 try:
     creds = service_account.Credentials.from_service_account_info(st.secrets["google"])
     service = build('sheets', 'v4', credentials=creds)
     sheet = service.spreadsheets()
 
     SHEET_ID = st.secrets["planilha"]["sheet_id"]
-    RANGE = "Respostas ao formulário 1!A1:AM1000"  # ✅ Faixa até a coluna AM
+    RANGE = "Respostas ao formulário 1!A1:AM1000"  # Inclui até a coluna AM
 
     result = sheet.values().get(spreadsheetId=SHEET_ID, range=RANGE).execute()
     values = result.get('values', [])
@@ -58,7 +59,7 @@ try:
         st.error("Não foi possível carregar os dados da planilha.")
         st.stop()
 
-    # Garante que todas as colunas até AM sejam mantidas
+    # Garante que todas as colunas sejam mantidas
     colunas = values[0]
     num_colunas = len(colunas)
 
@@ -67,13 +68,16 @@ try:
         linha_completa = linha + [""] * (num_colunas - len(linha))
         linhas.append(linha_completa)
 
-    df = pd.DataFrame(linhas, columns=colunas)
+    df_original = pd.DataFrame(linhas, columns=colunas)
+
+    # ✅ Aplica tratamento com ajusteBD
+    df = tratar_dados(df_original)
 
 except Exception as e:
     st.error(f"Erro ao carregar os dados: {e}")
     st.stop()
 
-# ✅ Conversão de colunas numéricas
+# ✅ Conversão de colunas numéricas (após tratamento)
 if 'Idade' in df.columns:
     df['Idade'] = pd.to_numeric(df['Idade'], errors='coerce')
 if 'QV_Escore' in df.columns:

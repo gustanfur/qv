@@ -1,48 +1,44 @@
 import pandas as pd
-import json
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
 
-def carregar_e_tratar_planilha(secrets_path="secrets.json") -> pd.DataFrame:
-    # Carrega credenciais do arquivo JSON
-    with open(secrets_path, "r") as f:
-        secrets = json.load(f)
+def tratar_dados(df_original: pd.DataFrame) -> pd.DataFrame:
+    """
+    - Adiciona rótulos Q1 a Q38 nas colunas L até AK
+    - Move a coluna AL para o início
+    - Remove colunas AM, AN, A e B
+    - Reinicia a contagem Q nas colunas restantes até L
+    """
+    df = df_original.copy()
 
-    creds = service_account.Credentials.from_service_account_info(secrets["google"])
-    service = build('sheets', 'v4', credentials=creds)
-    sheet = service.spreadsheets()
+    # Etapa 1: Adiciona rótulos Q1 a Q38 nas colunas L até AK
+    colunas_q1 = df.columns[11:38]  # L (índice 11) até AK (índice 38)
+    q_labels = [f"Q{i+1}" for i in range(len(colunas_q1))]
+    q_map = dict(zip(colunas_q1, q_labels))
+    df.rename(columns=q_map, inplace=True)
 
-    SHEET_ID = secrets["planilha"]["sheet_id"]
-    RANGE = secrets["planilha"]["range"]
+    # Etapa 2: Move a coluna AL (índice 39) para o início
+    col_al = df.columns[38] if len(df.columns) > 38 else None
+    if col_al:
+        colunas = [col_al] + [col for col in df.columns if col != col_al]
+        df = df[colunas]
 
-    result = sheet.values().get(spreadsheetId=SHEET_ID, range=RANGE).execute()
-    values = result.get('values', [])
+    # Etapa 3: Remove colunas AM, AN, A e B
+    colunas_para_remover = []
+    for nome in df.columns:
+        if nome.strip().upper() in ["AM", "AN", "A", "B"]:
+            colunas_para_remover.append(nome)
+    df.drop(columns=colunas_para_remover, inplace=True, errors='ignore')
 
-    if not values:
-        raise ValueError("Planilha vazia ou não acessível.")
+    # Etapa 4: Reinicia contagem Q nas colunas restantes até a nova posição de "L"
+    if "L" in df.columns:
+        idx_l = df.columns.get_loc("L")
+        novas_q = [f"Q{i+1}" for i in range(idx_l + 1)]
+        nova_linha = novas_q + [""] * (len(df.columns) - len(novas_q))
+    else:
+        nova_linha = [""] * len(df.columns)
 
-    colunas = values[0]
-    num_colunas = len(colunas)
+    # Insere a nova linha no topo
+    df.loc[-1] = nova_linha
+    df.index = df.index + 1
+    df = df.sort_index()
 
-    linhas = []
-    for linha in values[1:]:
-        linha += [""] * (num_colunas - len(linha))
-        linhas.append(linha)
-
-    df_original = pd.DataFrame(linhas, columns=colunas)
-
-    # Adiciona linha com rótulos Q1 a Q26
-    total_colunas = len(df_original.columns)
-    linha_q = []
-    for i in range(total_colunas):
-        if 11 <= i <= 25:
-            linha_q.append(f"Q{i - 10}")
-        elif i < 11:
-            linha_q.append(f"Q{i + 16}")
-        else:
-            linha_q.append("")
-    df_original.loc[-1] = linha_q
-    df_original.index = df_original.index + 1
-    df_original = df_original.sort_index()
-
-    return df_original
+    return df
