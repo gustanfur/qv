@@ -11,18 +11,25 @@ def calcular_escores(df: pd.DataFrame) -> pd.DataFrame:
     - Calcula escores dos 4 domínios e remove colunas intermediárias
     """
 
-    # Etapa 1: Reindexa usando linha 1 como cabeçalho
+    # Etapa 1: Reindexa e separa cabeçalho e dados
     df_resetado = df.reset_index(drop=True)
     novo_header = df_resetado.iloc[0]
     df_dados = df_resetado.iloc[2:].copy().reset_index(drop=True)
-    df_dados.columns = novo_header
 
-    # Etapa 2: Mantém a coluna Índice + Q1 a Q26
+    # Preserva a coluna Índice antes de redefinir os cabeçalhos
+    if "Índice" in df.columns:
+        indice_coluna = df["Índice"].iloc[2:].reset_index(drop=True)
+        df_dados.insert(0, "Índice", indice_coluna)
+
+    # Redefine cabeçalhos para colunas Q
+    df_dados.columns = ["Índice"] + list(novo_header[1:]) if "Índice" in df.columns else novo_header
+
+    # Etapa 2: Seleciona colunas Q1 a Q26
     colunas_q = [f"Q{i}" for i in range(1, 27)]
-    colunas_utilizadas = ["Índice"] + colunas_q
+    colunas_utilizadas = ["Índice"] + colunas_q if "Índice" in df_dados.columns else colunas_q
     df_q = df_dados[colunas_utilizadas].copy()
 
-    # Etapa 3: Recodificação textual com limpeza
+    # Etapa 3: Recodificação textual
     mapa_texto = {
         "Muito boa": 5,
         "Muito satisfeito(a)": 5,
@@ -53,7 +60,7 @@ def calcular_escores(df: pd.DataFrame) -> pd.DataFrame:
     for col in colunas_q:
         df_q[col] = df_q[col].astype(str).str.strip().map(mapa_texto)
 
-    # Etapa 4: Aplica inversão SOMENTE nas colunas específicas
+    # Etapa 4: Inversão nas colunas específicas
     mapa_inverso = {1: 5, 2: 4, 3: 3, 4: 2, 5: 1}
     colunas_invertidas = ["Q3", "Q4", "Q26"]
 
