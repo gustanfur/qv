@@ -3,10 +3,10 @@ import pandas as pd
 def tratar_dados(df_original: pd.DataFrame) -> pd.DataFrame:
     """
     - Adiciona coluna 'Índice' para rastrear cada linha
-    - Separa colunas L até AK em uma tabela (df_q)
-    - Separa o restante das colunas em outra tabela (df_restante)
-    - Reúne as duas tabelas usando o índice como chave
-    - Adiciona uma linha de rótulos Q1 a Qn nas colunas L até AK
+    - Separa colunas L até AK em df_q
+    - Separa o restante em df_restante
+    - Une as tabelas via 'Índice'
+    - Adiciona nova linha no topo com rótulos Q1...Qn (exceto na coluna 'Índice')
     """
 
     df = df_original.copy()
@@ -14,7 +14,7 @@ def tratar_dados(df_original: pd.DataFrame) -> pd.DataFrame:
     # Etapa 1: Adiciona coluna de índice
     df.insert(0, "Índice", range(len(df)))
 
-    # Etapa 2: Identifica colunas L até AK (índices 11 a 37, considerando que 'Índice' foi inserido na posição 0)
+    # Etapa 2: Identifica colunas L até AK (índices 11 a 37 após inserção do índice)
     colunas_q = df.columns[12:39]  # L até AK
     colunas_restantes = [col for col in df.columns if col not in colunas_q]
 
@@ -22,13 +22,13 @@ def tratar_dados(df_original: pd.DataFrame) -> pd.DataFrame:
     df_q = df[["Índice"] + list(colunas_q)].copy()
     df_restante = df[colunas_restantes].copy()
 
-    # Etapa 4: Adiciona rótulos Q1 a Qn na tabela df_q
-    linha_q = [""] + [f"Q{i+1}" for i in range(len(colunas_q))]
-    df_q.loc[-1] = linha_q
-    df_q.index = df_q.index + 1
-    df_q = df_q.sort_index()
-
-    # Etapa 5: Junta as tabelas usando o índice
+    # Etapa 4: Une as tabelas via 'Índice'
     df_final = pd.merge(df_q, df_restante, on="Índice", how="inner")
+
+    # Etapa 5: Adiciona nova linha com rótulos Q1...Qn (exceto na coluna 'Índice')
+    nova_linha = [""] + [f"Q{i+1}" for i in range(len(df_final.columns) - 1)]
+    df_final.loc[-1] = nova_linha
+    df_final.index = df_final.index + 1
+    df_final = df_final.sort_index()
 
     return df_final
